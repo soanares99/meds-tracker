@@ -184,9 +184,12 @@
   }
   .add-row{
     display:flex;
+    flex-wrap:wrap;
     gap:8px;
     margin-top:14px;
   }
+  .add-row input{flex:0 0 auto;}
+  .add-row #name-input{flex:1 1 150px;}
   input[type=text]{
     flex:1;
     padding:10px 12px;
@@ -200,6 +203,50 @@
   input[type=text]:focus{outline:2px solid var(--teal);outline-offset:1px;}
   input[type=text]::placeholder{color:var(--ink-soft);}
   #dose-input{max-width:110px;}
+  #tag-input{max-width:110px;}
+  input[type=number]{
+    padding:10px 10px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--ink);
+    max-width:78px;
+  }
+  input[type=number]:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .course-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--teal-deep);
+    background:var(--surface-2);
+    padding:2px 7px;
+    border-radius:6px;
+    white-space:nowrap;
+    cursor:pointer;
+    border:none;
+  }
+  .course-badge.complete{
+    background:var(--amber-light);
+    color:var(--amber-deep);
+  }
+  .course-set-btn{
+    font-size:11px;
+    color:var(--ink-soft);
+    background:none;
+    border:1px dashed var(--border);
+    padding:2px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .course-set-btn:hover{color:var(--ink);border-color:var(--border-strong);}
+  .course-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:0 12px 10px;
+  }
   input[type=time]{
     padding:10px 10px;
     border-radius:10px;
@@ -229,6 +276,17 @@
     font-weight:600;
     color:var(--teal-deep);
   }
+  .tag-badge{
+    font-size:11px;
+    font-weight:600;
+    padding:2px 8px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .tag-c0{background:#DCEAE6;color:var(--teal-deep);}
+  .tag-c1{background:#F3E3C8;color:var(--amber-deep);}
+  .tag-c2{background:#E7DEF0;color:#5B3F82;}
+  .tag-c3{background:#E3E9E6;color:#3F5750;}
   .add-btn{
     padding:10px 16px;
     border-radius:10px;
@@ -239,6 +297,7 @@
     font-size:14px;
     cursor:pointer;
     white-space:nowrap;
+    flex-shrink:0;
   }
   .add-btn:hover{background:var(--teal-deep);}
   .empty{
@@ -432,7 +491,10 @@
       <div class="add-row">
         <input type="text" id="name-input" placeholder="Medication name">
         <input type="text" id="dose-input" placeholder="Dose (optional)">
+        <input type="text" id="tag-input" placeholder="Category (optional)">
         <input type="time" id="time-input" title="Time to take it (optional)">
+        <input type="number" id="course-day-input" placeholder="Day" min="0" title="Current day of the course (optional)">
+        <input type="number" id="course-total-input" placeholder="of days" min="1" title="Total days of the course (optional)">
         <button class="add-btn" id="add-btn">Add</button>
       </div>
     </section>
@@ -629,6 +691,37 @@ function renderMeds(){
   list.querySelectorAll('.remove-med').forEach(btn=>{
     btn.addEventListener('click', ()=> removeMed(btn.dataset.id));
   });
+  list.querySelectorAll('.course-badge, .course-set-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> editCourse(btn.dataset.id));
+  });
+}
+
+function tagColorClass(tag){
+  let hash = 0;
+  for(let i=0;i<tag.length;i++) hash = (hash + tag.charCodeAt(i)) % 4;
+  return 'tag-c' + hash;
+}
+
+function courseBadgeHtml(m){
+  const day = m.courseDay || 0;
+  const total = m.courseTotal;
+  const complete = day >= total;
+  return `<button class="course-badge ${complete ? 'complete' : ''}" data-id="${m.id}">${complete ? 'Course complete' : `Day ${day} of ${total}`}</button>`;
+}
+
+async function editCourse(id){
+  const med = meds.find(m => m.id === id);
+  if(!med) return;
+  const dayStr = window.prompt('What day of the course are you on?', med.courseDay ?? '');
+  if(dayStr === null) return;
+  const totalStr = window.prompt('Total days for this course:', med.courseTotal ?? '');
+  if(totalStr === null) return;
+  const day = parseInt(dayStr, 10);
+  const total = parseInt(totalStr, 10);
+  med.courseDay = isNaN(day) ? null : day;
+  med.courseTotal = (isNaN(total) || total <= 0) ? null : total;
+  await saveMeds();
+  renderMeds();
 }
 
 function medCardHtml(m){
@@ -643,6 +736,10 @@ function medCardHtml(m){
           <button class="take-btn" data-id="${m.id}">Mark taken</button>
           <button class="remove-med" data-id="${m.id}" aria-label="Remove ${escapeHtml(m.name)}">&times;</button>
         </div>
+      </div>
+      <div class="course-row">
+        ${m.tag ? `<span class="tag-badge ${tagColorClass(m.tag)}">${escapeHtml(m.tag)}</span>` : ''}
+        ${m.courseTotal ? courseBadgeHtml(m) : `<button class="course-set-btn" data-id="${m.id}">+ set course length</button>`}
       </div>
     </div>
   `;
@@ -670,6 +767,7 @@ function renderHistory(){
         <span class="log-time">${formatTime(l.timestamp)}</span>
         <span class="log-name">${escapeHtml(l.name)}</span>
         ${l.dose ? `<span class="log-dose">${escapeHtml(l.dose)}</span>` : ''}
+        ${l.tag ? `<span class="tag-badge ${tagColorClass(l.tag)}">${escapeHtml(l.tag)}</span>` : ''}
         <button class="del-log" data-id="${l.id}" aria-label="Delete entry">&times;</button>
       </div>
     `).join('');
@@ -758,6 +856,7 @@ function renderMetrics(){
     return `
       <div class="metric-row">
         <span class="metric-name">${escapeHtml(m.name)}</span>
+        ${m.tag ? `<span class="tag-badge ${tagColorClass(m.tag)}">${escapeHtml(m.tag)}</span>` : ''}
         <div class="metric-stat">
           <span class="metric-value">${streak > 0 ? streak + (streak===1 ? ' day' : ' days') : '—'}</span>
           <span class="metric-label">Streak</span>
@@ -780,15 +879,24 @@ function escapeHtml(str){
 async function addMed(){
   const nameInput = document.getElementById('name-input');
   const doseInput = document.getElementById('dose-input');
+  const tagInput = document.getElementById('tag-input');
   const timeInput = document.getElementById('time-input');
+  const courseDayInput = document.getElementById('course-day-input');
+  const courseTotalInput = document.getElementById('course-total-input');
   const name = nameInput.value.trim();
   const dose = doseInput.value.trim();
+  const tag = tagInput.value.trim();
   const time = timeInput.value;
+  const courseDay = courseDayInput.value ? parseInt(courseDayInput.value, 10) : null;
+  const courseTotal = courseTotalInput.value ? parseInt(courseTotalInput.value, 10) : null;
   if(!name) { nameInput.focus(); return; }
-  meds.push({ id: uid(), name, dose, time: time || null });
+  meds.push({ id: uid(), name, dose, tag: tag || null, time: time || null, courseDay, courseTotal });
   nameInput.value = '';
   doseInput.value = '';
+  tagInput.value = '';
   timeInput.value = '';
+  courseDayInput.value = '';
+  courseTotalInput.value = '';
   await saveMeds();
   renderMeds();
   renderMetrics();
@@ -805,7 +913,12 @@ async function removeMed(id){
 async function logTaken(id){
   const med = meds.find(m => m.id === id);
   if(!med) return;
-  logs.push({ id: uid(), medId: med.id, name: med.name, dose: med.dose, timestamp: new Date().toISOString() });
+  const alreadyTakenToday = !!getStatus(med).label && getStatus(med).cls === 'status-done';
+  logs.push({ id: uid(), medId: med.id, name: med.name, dose: med.dose, tag: med.tag, timestamp: new Date().toISOString() });
+  if(!alreadyTakenToday && med.courseTotal){
+    med.courseDay = Math.min((med.courseDay || 0) + 1, med.courseTotal);
+    await saveMeds();
+  }
   await saveLogs();
   renderHistory();
   renderMeds();
@@ -828,7 +941,10 @@ async function deleteLog(id){
 document.getElementById('add-btn').addEventListener('click', addMed);
 document.getElementById('name-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
 document.getElementById('dose-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
+document.getElementById('tag-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
 document.getElementById('time-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
+document.getElementById('course-day-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
+document.getElementById('course-total-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
 
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{

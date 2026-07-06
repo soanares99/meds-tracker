@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Meds tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F3EC;
+    --surface: #FFFFFF;
+    --surface-2: #EFEDE3;
+    --ink: #232F2A;
+    --ink-soft: #6E7A72;
+    --teal: #2F6F62;
+    --teal-deep: #1E4A41;
+    --amber: #C98A2E;
+    --amber-light: #F3D9AC;
+    --amber-deep: #8C5F1D;
+    --brick: #B0503A;
+    --border: rgba(35,47,42,0.10);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:560px;
+    margin:0 auto;
+    padding:40px 20px 80px;
+  }
+  header{
+    margin-bottom:28px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:-0.02em;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:14px;
+    margin:0;
+  }
+  .today-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--teal-deep);
+    background:var(--surface-2);
+    padding:4px 10px;
+    border-radius:20px;
+    margin-top:10px;
+  }
+  section{margin-bottom:36px;}
+  .tabs{
+    display:flex;
+    gap:22px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:24px;
+  }
+  .tab-btn{
+    background:none;
+    border:none;
+    padding:0 0 12px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .tab-btn:hover{color:var(--ink);}
+  .tab-btn.active{
+    color:var(--ink);
+    border-bottom-color:var(--teal);
+  }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .section-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink);
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .med-grid{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .time-group{margin-bottom:16px;}
+  .time-group-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .time-group-label .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--amber);
+  }
+  .med-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:0;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    transition:transform 0.12s ease;
+  }
+  .med-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+  }
+  .med-name{
+    font-weight:600;
+    font-size:15px;
+    white-space:nowrap;
+  }
+  .med-dose{
+    font-size:12px;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;
+    white-space:nowrap;
+  }
+  .med-actions-inline{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    margin-left:auto;
+  }
+  .take-btn{
+    border:1px solid var(--border);
+    background:none;
+    padding:6px 12px;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--teal-deep);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .take-btn:active{transform:scale(0.97);}
+  .take-btn:hover{background:rgba(47,111,98,0.07);}
+  .remove-med{
+    border:none;
+    background:none;
+    width:28px;
+    height:28px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-size:15px;
+    border-radius:8px;
+  }
+  .remove-med:hover{color:var(--brick);background:rgba(176,80,58,0.08);}
+  .just-taken{
+    animation:flash 0.6s ease;
+  }
+  @keyframes flash{
+    0%{background:var(--amber-light);}
+    100%{background:var(--surface);}
+  }
+  .add-row{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  input[type=text]{
+    flex:1;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+  }
+  input[type=text]:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  input[type=text]::placeholder{color:var(--ink-soft);}
+  #dose-input{max-width:110px;}
+  input[type=time]{
+    padding:10px 10px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--ink);
+    max-width:110px;
+  }
+  input[type=time]:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .med-time{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--teal-deep);
+    background:var(--surface-2);
+    padding:2px 7px;
+    border-radius:6px;
+  }
+  .status-due{
+    font-size:11px;
+    font-weight:600;
+    color:var(--brick);
+  }
+  .status-done{
+    font-size:11px;
+    font-weight:600;
+    color:var(--teal-deep);
+  }
+  .add-btn{
+    padding:10px 16px;
+    border-radius:10px;
+    border:none;
+    background:var(--teal);
+    color:#fff;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .add-btn:hover{background:var(--teal-deep);}
+  .empty{
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:18px 0;
+    text-align:center;
+    border:1px dashed var(--border);
+    border-radius:12px;
+  }
+  .metric-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:10px 12px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    margin-bottom:8px;
+  }
+  .metric-name{
+    font-weight:600;
+    font-size:14px;
+    flex:1;
+  }
+  .metric-stat{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    min-width:78px;
+  }
+  .metric-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    font-weight:500;
+    color:var(--teal-deep);
+  }
+  .metric-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+  }
+  .day-group{margin-bottom:18px;}
+  .day-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .log-entry{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 4px;
+    border-bottom:1px solid var(--border);
+    font-size:14px;
+  }
+  .log-entry:last-child{border-bottom:none;}
+  .log-time{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--teal-deep);
+    background:var(--surface-2);
+    padding:2px 7px;
+    border-radius:6px;
+    min-width:60px;
+    text-align:center;
+  }
+  .log-name{flex:1;font-weight:500;}
+  .log-dose{color:var(--ink-soft);font-size:12px;font-family:'IBM Plex Mono',monospace;}
+  .del-log{
+    border:none;background:none;color:var(--ink-soft);
+    cursor:pointer;font-size:14px;padding:2px 4px;
+  }
+  .del-log:hover{color:var(--brick);}
+  .loading{color:var(--ink-soft);font-size:13px;padding:20px 0;text-align:center;}
+  .sync-row{
+    margin-top:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .sync-row .sync-code{
+    font-family:'IBM Plex Mono',monospace;
+    background:var(--surface-2);
+    padding:3px 8px;
+    border-radius:6px;
+    color:var(--teal-deep);
+  }
+  .sync-row button{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:12px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .sync-row button:hover{color:var(--ink);}
+  .setup-screen{
+    display:flex;
+    justify-content:center;
+    padding:40px 0;
+  }
+  .setup-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:24px;
+    max-width:420px;
+  }
+  .setup-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:17px;
+    margin-bottom:8px;
+  }
+  .setup-copy{
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin:0 0 16px;
+  }
+  .setup-divider{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:16px 0;
+  }
+  .setup-card .add-btn{width:100%;}
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    font-size:13px;
+    padding:8px 16px;
+    border-radius:10px;
+    opacity:0;
+    transition:opacity 0.2s ease;
+    pointer-events:none;
+    z-index:10;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Meds</h1>
+    <p class="sub">Track what you took, and when.</p>
+    <div class="today-pill" id="today-pill"></div>
+    <div class="sync-row" id="sync-row"></div>
+  </header>
+
+  <div id="setup-screen" class="setup-screen" style="display:none;">
+    <div class="setup-card">
+      <div class="setup-title">Set up sync</div>
+      <p class="setup-copy">Create a sync code once, then enter that same code on every device to share this data between them. Keep it somewhere safe — anyone with the code can see and edit this data.</p>
+      <button class="add-btn" id="create-sync-btn">Create a new sync code</button>
+      <div class="setup-divider">or</div>
+      <div class="add-row">
+        <input type="text" id="join-code-input" placeholder="Enter an existing sync code">
+        <button class="add-btn" id="join-sync-btn">Connect</button>
+      </div>
+      <div class="setup-copy" style="margin-top:14px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="skip-sync-checkbox" style="width:auto;">
+          Skip for now, use this device only
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-content" style="display:none;">
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="meds" role="tab" aria-selected="true">Medications</button>
+      <button class="tab-btn" data-tab="metrics" role="tab" aria-selected="false">Metrics</button>
+      <button class="tab-btn" data-tab="history" role="tab" aria-selected="false">History</button>
+    </nav>
+
+    <section class="tab-panel active" data-panel="meds">
+      <div id="med-list"></div>
+      <div class="add-row">
+        <input type="text" id="name-input" placeholder="Medication name">
+        <input type="text" id="dose-input" placeholder="Dose (optional)">
+        <input type="time" id="time-input" title="Time to take it (optional)">
+        <button class="add-btn" id="add-btn">Add</button>
+      </div>
+    </section>
+
+    <section class="tab-panel" data-panel="metrics">
+      <div id="metrics"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="history">
+      <div id="history"></div>
+    </section>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let meds = [];
+let logs = [];
+let syncId = localStorage.getItem('meds-sync-id') || '';
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function randomCode(){
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  let s = '';
+  for(let i=0;i<10;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+async function kvGet(){
+  const res = await fetch(`https://kvdb.io/${syncId}/data`);
+  if(res.status === 404) return { meds: [], logs: [] };
+  if(!res.ok) throw new Error('sync read failed');
+  const text = await res.text();
+  return text ? JSON.parse(text) : { meds: [], logs: [] };
+}
+
+async function kvSet(){
+  await fetch(`https://kvdb.io/${syncId}/data`, {
+    method: 'PUT',
+    body: JSON.stringify({ meds, logs })
+  });
+}
+
+function renderSyncRow(){
+  const row = document.getElementById('sync-row');
+  if(!syncId){
+    row.innerHTML = '<span>Not synced</span> <button id="setup-link">set up sync</button>';
+    document.getElementById('setup-link').addEventListener('click', showSetupScreen);
+    return;
+  }
+  row.innerHTML = `<span>Synced</span> <span class="sync-code">${syncId}</span> <button id="copy-code-btn">copy</button> <button id="change-code-btn">change</button>`;
+  document.getElementById('copy-code-btn').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(syncId);
+    showToast('Sync code copied');
+  });
+  document.getElementById('change-code-btn').addEventListener('click', showSetupScreen);
+}
+
+function showSetupScreen(){
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('app-content').style.display = 'none';
+}
+
+function hideSetupScreen(){
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app-content').style.display = 'block';
+}
+
+async function loadData(){
+  if(!syncId){
+    showSetupScreen();
+    renderSyncRow();
+    return;
+  }
+  hideSetupScreen();
+  renderSyncRow();
+  document.getElementById('med-list').innerHTML = '<div class="loading">Loading your meds...</div>';
+  document.getElementById('history').innerHTML = '<div class="loading">Loading history...</div>';
+  try{
+    const data = await kvGet();
+    meds = data.meds || [];
+    logs = data.logs || [];
+  }catch(e){
+    meds = [];
+    logs = [];
+    showToast('Could not reach sync — check your connection');
+  }
+  render();
+}
+
+async function saveMeds(){
+  try{ await kvSet(); }
+  catch(e){ showToast('Could not save — check your connection'); }
+}
+async function saveLogs(){
+  try{ await kvSet(); }
+  catch(e){ showToast('Could not save — check your connection'); }
+}
+
+document.getElementById('create-sync-btn').addEventListener('click', async ()=>{
+  syncId = randomCode();
+  localStorage.setItem('meds-sync-id', syncId);
+  meds = [];
+  logs = [];
+  await kvSet();
+  loadData();
+  showToast('Sync code created — copy it to your other devices');
+});
+
+document.getElementById('join-sync-btn').addEventListener('click', ()=>{
+  const code = document.getElementById('join-code-input').value.trim();
+  if(!code) return;
+  syncId = code;
+  localStorage.setItem('meds-sync-id', syncId);
+  loadData();
+});
+
+document.getElementById('skip-sync-checkbox').addEventListener('change', (e)=>{
+  if(e.target.checked){
+    syncId = 'local-' + randomCode();
+    localStorage.setItem('meds-sync-id', syncId);
+    kvSet();
+    loadData();
+  }
+});
+
+function formatToday(){
+  const d = new Date();
+  return d.toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+}
+
+function formatTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+}
+
+function formatDayLabel(iso){
+  const d = new Date(iso);
+  const today = new Date();
+  const yest = new Date(); yest.setDate(today.getDate()-1);
+  const sameDay = (a,b)=> a.toDateString()===b.toDateString();
+  if(sameDay(d,today)) return 'Today';
+  if(sameDay(d,yest)) return 'Yesterday';
+  return d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+}
+
+function render(){
+  document.getElementById('today-pill').innerHTML = '<i class="ti"></i>' + formatToday();
+  renderMeds();
+  renderMetrics();
+  renderHistory();
+}
+
+function renderMeds(){
+  const list = document.getElementById('med-list');
+  if(meds.length === 0){
+    list.innerHTML = '<div class="empty">No medications yet. Add your first one below.</div>';
+    return;
+  }
+
+  const groups = {};
+  meds.forEach(m=>{
+    const key = m.time || 'none';
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(m);
+  });
+
+  const timedKeys = Object.keys(groups).filter(k=>k!=='none').sort();
+  const orderedKeys = groups['none'] ? [...timedKeys, 'none'] : timedKeys;
+
+  list.innerHTML = orderedKeys.map(key=>{
+    const groupLabel = key === 'none' ? 'No set time' : formatTimeStr(key);
+    const cards = groups[key].map(m => medCardHtml(m)).join('');
+    return `
+      <div class="time-group">
+        <div class="time-group-label"><span class="dot"></span>${groupLabel}</div>
+        <div class="med-grid">${cards}</div>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.take-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> logTaken(btn.dataset.id));
+  });
+  list.querySelectorAll('.remove-med').forEach(btn=>{
+    btn.addEventListener('click', ()=> removeMed(btn.dataset.id));
+  });
+}
+
+function medCardHtml(m){
+  const status = getStatus(m);
+  return `
+    <div class="med-card" id="card-${m.id}">
+      <div class="med-row">
+        <span class="med-name">${escapeHtml(m.name)}</span>
+        ${m.dose ? `<span class="med-dose">${escapeHtml(m.dose)}</span>` : ''}
+        ${status.label ? `<span class="${status.cls}">${status.label}</span>` : ''}
+        <div class="med-actions-inline">
+          <button class="take-btn" data-id="${m.id}">Mark taken</button>
+          <button class="remove-med" data-id="${m.id}" aria-label="Remove ${escapeHtml(m.name)}">&times;</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHistory(){
+  const container = document.getElementById('history');
+  if(logs.length === 0){
+    container.innerHTML = '<div class="empty">Nothing logged yet. Mark a medication as taken above.</div>';
+    return;
+  }
+  const sorted = [...logs].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+  const groups = {};
+  sorted.forEach(l=>{
+    const key = new Date(l.timestamp).toDateString();
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(l);
+  });
+
+  container.innerHTML = Object.keys(groups).map(key=>{
+    const entries = groups[key];
+    const label = formatDayLabel(entries[0].timestamp);
+    const rows = entries.map(l=>`
+      <div class="log-entry">
+        <span class="log-time">${formatTime(l.timestamp)}</span>
+        <span class="log-name">${escapeHtml(l.name)}</span>
+        ${l.dose ? `<span class="log-dose">${escapeHtml(l.dose)}</span>` : ''}
+        <button class="del-log" data-id="${l.id}" aria-label="Delete entry">&times;</button>
+      </div>
+    `).join('');
+    return `<div class="day-group"><div class="day-label">${label}</div>${rows}</div>`;
+  }).join('');
+
+  container.querySelectorAll('.del-log').forEach(btn=>{
+    btn.addEventListener('click', ()=> deleteLog(btn.dataset.id));
+  });
+}
+
+function formatTimeStr(hhmm){
+  const [h,m] = hhmm.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+}
+
+function getStatus(med){
+  const today = new Date().toDateString();
+  const takenToday = logs.find(l => l.medId === med.id && new Date(l.timestamp).toDateString() === today);
+  if(takenToday){
+    return { label: 'Taken ' + formatTime(takenToday.timestamp), cls: 'status-done' };
+  }
+  if(med.time){
+    const now = new Date();
+    const [h,m] = med.time.split(':').map(Number);
+    const scheduled = new Date();
+    scheduled.setHours(h, m, 0, 0);
+    if(now > scheduled){
+      return { label: 'Due', cls: 'status-due' };
+    }
+  }
+  return { label: '', cls: '' };
+}
+
+function computeStreak(medId){
+  const days = new Set(
+    logs.filter(l => l.medId === medId).map(l => new Date(l.timestamp).toDateString())
+  );
+  if(days.size === 0) return 0;
+
+  const cursor = new Date();
+  cursor.setHours(0,0,0,0);
+
+  if(!days.has(cursor.toDateString())){
+    cursor.setDate(cursor.getDate() - 1);
+    if(!days.has(cursor.toDateString())) return 0;
+  }
+
+  let streak = 0;
+  while(days.has(cursor.toDateString())){
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+function computeAvgTime(medId){
+  const times = logs.filter(l => l.medId === medId).map(l => {
+    const d = new Date(l.timestamp);
+    return d.getHours() * 60 + d.getMinutes();
+  });
+  if(times.length === 0) return null;
+  const avgMinutes = Math.round(times.reduce((a,b)=>a+b, 0) / times.length);
+  const d = new Date();
+  d.setHours(Math.floor(avgMinutes / 60), avgMinutes % 60, 0, 0);
+  return d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+}
+
+function renderMetrics(){
+  const container = document.getElementById('metrics');
+  if(meds.length === 0){
+    container.innerHTML = '<div class="empty">Add a medication to start tracking metrics.</div>';
+    return;
+  }
+  const sorted = [...meds].sort((a,b)=>{
+    if(!a.time && !b.time) return 0;
+    if(!a.time) return 1;
+    if(!b.time) return -1;
+    return a.time.localeCompare(b.time);
+  });
+  container.innerHTML = sorted.map(m => {
+    const streak = computeStreak(m.id);
+    const avg = computeAvgTime(m.id);
+    return `
+      <div class="metric-row">
+        <span class="metric-name">${escapeHtml(m.name)}</span>
+        <div class="metric-stat">
+          <span class="metric-value">${streak > 0 ? streak + (streak===1 ? ' day' : ' days') : '—'}</span>
+          <span class="metric-label">Streak</span>
+        </div>
+        <div class="metric-stat">
+          <span class="metric-value">${avg || '—'}</span>
+          <span class="metric-label">Avg time</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+async function addMed(){
+  const nameInput = document.getElementById('name-input');
+  const doseInput = document.getElementById('dose-input');
+  const timeInput = document.getElementById('time-input');
+  const name = nameInput.value.trim();
+  const dose = doseInput.value.trim();
+  const time = timeInput.value;
+  if(!name) { nameInput.focus(); return; }
+  meds.push({ id: uid(), name, dose, time: time || null });
+  nameInput.value = '';
+  doseInput.value = '';
+  timeInput.value = '';
+  await saveMeds();
+  renderMeds();
+  renderMetrics();
+  nameInput.focus();
+}
+
+async function removeMed(id){
+  meds = meds.filter(m => m.id !== id);
+  await saveMeds();
+  renderMeds();
+  renderMetrics();
+}
+
+async function logTaken(id){
+  const med = meds.find(m => m.id === id);
+  if(!med) return;
+  logs.push({ id: uid(), medId: med.id, name: med.name, dose: med.dose, timestamp: new Date().toISOString() });
+  await saveLogs();
+  renderHistory();
+  renderMeds();
+  renderMetrics();
+  const card = document.getElementById('card-'+id);
+  if(card){
+    card.classList.add('just-taken');
+    setTimeout(()=>card.classList.remove('just-taken'), 650);
+  }
+}
+
+async function deleteLog(id){
+  logs = logs.filter(l => l.id !== id);
+  await saveLogs();
+  renderHistory();
+  renderMeds();
+  renderMetrics();
+}
+
+document.getElementById('add-btn').addEventListener('click', addMed);
+document.getElementById('name-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
+document.getElementById('dose-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
+document.getElementById('time-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addMed(); });
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>{
+      b.classList.remove('active');
+      b.setAttribute('aria-selected','false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+  });
+});
+
+loadData();
+</script>
+</body>
+</html>

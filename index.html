@@ -175,6 +175,59 @@
     border-radius:8px;
   }
   .remove-med:hover{color:var(--brick);background:rgba(176,80,58,0.08);}
+  .edit-med{
+    border:none;
+    background:none;
+    padding:6px 8px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-size:12px;
+    font-weight:600;
+    border-radius:8px;
+    white-space:nowrap;
+  }
+  .edit-med:hover{color:var(--ink);background:var(--surface-2);}
+  .edit-form{
+    padding:12px;
+  }
+  .edit-form-title{
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:8px;
+  }
+  .edit-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .edit-row input{flex:1;min-width:0;}
+  .edit-actions{
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+  }
+  .save-edit-btn{
+    padding:8px 14px;
+    border-radius:8px;
+    border:none;
+    background:var(--teal);
+    color:#fff;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .save-edit-btn:hover{background:var(--teal-deep);}
+  .cancel-edit-btn{
+    padding:8px 14px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:none;
+    color:var(--ink-soft);
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .cancel-edit-btn:hover{color:var(--ink);}
   .just-taken{
     animation:flash 0.6s ease;
   }
@@ -515,6 +568,7 @@
 <script>
 let meds = [];
 let logs = [];
+let editingId = null;
 let syncId = localStorage.getItem('meds-sync-id') || '';
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -691,8 +745,14 @@ function renderMeds(){
   list.querySelectorAll('.remove-med').forEach(btn=>{
     btn.addEventListener('click', ()=> removeMed(btn.dataset.id));
   });
-  list.querySelectorAll('.course-badge, .course-set-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=> editCourse(btn.dataset.id));
+  list.querySelectorAll('.edit-med, .course-badge, .course-set-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> editMed(btn.dataset.id));
+  });
+  list.querySelectorAll('.save-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> saveEdit(btn.dataset.id));
+  });
+  list.querySelectorAll('.cancel-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', cancelEdit);
   });
 }
 
@@ -709,22 +769,58 @@ function courseBadgeHtml(m){
   return `<button class="course-badge ${complete ? 'complete' : ''}" data-id="${m.id}">${complete ? 'Course complete' : `Day ${day} of ${total}`}</button>`;
 }
 
-async function editCourse(id){
-  const med = meds.find(m => m.id === id);
-  if(!med) return;
-  const dayStr = window.prompt('What day of the course are you on?', med.courseDay ?? '');
-  if(dayStr === null) return;
-  const totalStr = window.prompt('Total days for this course:', med.courseTotal ?? '');
-  if(totalStr === null) return;
-  const day = parseInt(dayStr, 10);
-  const total = parseInt(totalStr, 10);
-  med.courseDay = isNaN(day) ? null : day;
-  med.courseTotal = (isNaN(total) || total <= 0) ? null : total;
-  await saveMeds();
+function editMed(id){
+  editingId = id;
   renderMeds();
 }
 
+function cancelEdit(){
+  editingId = null;
+  renderMeds();
+}
+
+async function saveEdit(id){
+  const med = meds.find(m => m.id === id);
+  if(!med) return;
+  const card = document.getElementById('card-'+id);
+  const dose = card.querySelector('.edit-dose').value.trim();
+  const time = card.querySelector('.edit-time').value;
+  const dayVal = card.querySelector('.edit-day').value;
+  const totalVal = card.querySelector('.edit-total').value;
+  med.dose = dose || null;
+  med.time = time || null;
+  med.courseDay = dayVal ? parseInt(dayVal, 10) : null;
+  med.courseTotal = (totalVal && parseInt(totalVal, 10) > 0) ? parseInt(totalVal, 10) : null;
+  editingId = null;
+  await saveMeds();
+  renderMeds();
+  renderMetrics();
+}
+
+function editFormHtml(m){
+  return `
+    <div class="med-card" id="card-${m.id}">
+      <div class="edit-form">
+        <div class="edit-form-title">${escapeHtml(m.name)}</div>
+        <div class="edit-row">
+          <input type="text" class="edit-dose" placeholder="Dose" value="${m.dose ? escapeHtml(m.dose) : ''}">
+          <input type="time" class="edit-time" value="${m.time || ''}">
+        </div>
+        <div class="edit-row">
+          <input type="number" class="edit-day" placeholder="Day" min="0" value="${m.courseDay ?? ''}">
+          <input type="number" class="edit-total" placeholder="of days" min="1" value="${m.courseTotal ?? ''}">
+        </div>
+        <div class="edit-actions">
+          <button class="save-edit-btn" data-id="${m.id}">Save</button>
+          <button class="cancel-edit-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function medCardHtml(m){
+  if(editingId === m.id) return editFormHtml(m);
   const status = getStatus(m);
   return `
     <div class="med-card" id="card-${m.id}">
@@ -734,6 +830,7 @@ function medCardHtml(m){
         ${status.label ? `<span class="${status.cls}">${status.label}</span>` : ''}
         <div class="med-actions-inline">
           <button class="take-btn" data-id="${m.id}">Mark taken</button>
+          <button class="edit-med" data-id="${m.id}" aria-label="Edit ${escapeHtml(m.name)}">Edit</button>
           <button class="remove-med" data-id="${m.id}" aria-label="Remove ${escapeHtml(m.name)}">&times;</button>
         </div>
       </div>

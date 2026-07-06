@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Meds tracker</title>
+<title>Controle de remédios</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #F5F3EC;
+    --bg: #FBF4FF;
     --surface: #FFFFFF;
-    --surface-2: #EFEDE3;
-    --ink: #232F2A;
-    --ink-soft: #6E7A72;
-    --teal: #2F6F62;
-    --teal-deep: #1E4A41;
-    --amber: #C98A2E;
-    --amber-light: #F3D9AC;
-    --amber-deep: #8C5F1D;
-    --brick: #B0503A;
-    --border: rgba(35,47,42,0.10);
+    --surface-2: #F1E6FF;
+    --ink: #2B1B4D;
+    --ink-soft: #8577A8;
+    --teal: #7C3AED;
+    --teal-deep: #5B21B6;
+    --amber: #FDB933;
+    --amber-light: #FFEEBE;
+    --amber-deep: #92600A;
+    --brick: #F4436C;
+    --border: rgba(43,27,77,0.12);
   }
   *{box-sizing:border-box;}
   body{
@@ -336,10 +336,10 @@
     border-radius:6px;
     white-space:nowrap;
   }
-  .tag-c0{background:#DCEAE6;color:var(--teal-deep);}
-  .tag-c1{background:#F3E3C8;color:var(--amber-deep);}
-  .tag-c2{background:#E7DEF0;color:#5B3F82;}
-  .tag-c3{background:#E3E9E6;color:#3F5750;}
+  .tag-c0{background:#CFF7E8;color:#04785A;}
+  .tag-c1{background:#FFE3AC;color:#92500A;}
+  .tag-c2{background:#E9D8FE;color:#6D28D9;}
+  .tag-c3{background:#FFD3E6;color:#BE185D;}
   .add-btn{
     padding:10px 16px;
     border-radius:10px;
@@ -490,43 +490,45 @@
     position:fixed;
     bottom:20px;
     left:50%;
-    transform:translateX(-50%);
-    background:var(--ink);
+    transform:translateX(-50%) scale(0.9);
+    background:var(--teal);
     color:#fff;
     font-size:13px;
-    padding:8px 16px;
-    border-radius:10px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:20px;
     opacity:0;
-    transition:opacity 0.2s ease;
+    transition:opacity 0.2s ease, transform 0.2s ease;
     pointer-events:none;
     z-index:10;
+    box-shadow:0 6px 18px rgba(124,58,237,0.35);
   }
-  .toast.show{opacity:1;}
+  .toast.show{opacity:1;transform:translateX(-50%) scale(1);}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Meds</h1>
-    <p class="sub">Track what you took, and when.</p>
+    <h1>Remédios</h1>
+    <p class="sub">Registre o que você tomou, e quando.</p>
     <div class="today-pill" id="today-pill"></div>
     <div class="sync-row" id="sync-row"></div>
   </header>
 
   <div id="setup-screen" class="setup-screen" style="display:none;">
     <div class="setup-card">
-      <div class="setup-title">Set up sync</div>
-      <p class="setup-copy">Create a sync code once, then enter that same code on every device to share this data between them. Keep it somewhere safe — anyone with the code can see and edit this data.</p>
-      <button class="add-btn" id="create-sync-btn">Create a new sync code</button>
-      <div class="setup-divider">or</div>
+      <div class="setup-title">Configurar sincronização</div>
+      <p class="setup-copy">Crie um código de sincronização uma vez e digite esse mesmo código em cada dispositivo para compartilhar esses dados entre eles. Guarde-o em um lugar seguro — qualquer pessoa com o código pode ver e editar esses dados.</p>
+      <button class="add-btn" id="create-sync-btn">Criar novo código de sincronização</button>
+      <div class="setup-divider">ou</div>
       <div class="add-row">
-        <input type="text" id="join-code-input" placeholder="Enter an existing sync code">
-        <button class="add-btn" id="join-sync-btn">Connect</button>
+        <input type="text" id="join-code-input" placeholder="Digite um código existente">
+        <button class="add-btn" id="join-sync-btn">Conectar</button>
       </div>
       <div class="setup-copy" style="margin-top:14px;">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
           <input type="checkbox" id="skip-sync-checkbox" style="width:auto;">
-          Skip for now, use this device only
+          Pular por agora, usar só este dispositivo
         </label>
       </div>
     </div>
@@ -534,21 +536,21 @@
 
   <div id="app-content" style="display:none;">
     <nav class="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="meds" role="tab" aria-selected="true">Medications</button>
-      <button class="tab-btn" data-tab="metrics" role="tab" aria-selected="false">Metrics</button>
-      <button class="tab-btn" data-tab="history" role="tab" aria-selected="false">History</button>
+      <button class="tab-btn active" data-tab="meds" role="tab" aria-selected="true">Medicamentos</button>
+      <button class="tab-btn" data-tab="metrics" role="tab" aria-selected="false">Métricas</button>
+      <button class="tab-btn" data-tab="history" role="tab" aria-selected="false">Histórico</button>
     </nav>
 
     <section class="tab-panel active" data-panel="meds">
       <div id="med-list"></div>
       <div class="add-row">
-        <input type="text" id="name-input" placeholder="Medication name">
-        <input type="text" id="dose-input" placeholder="Dose (optional)">
-        <input type="text" id="tag-input" placeholder="Category (optional)">
-        <input type="time" id="time-input" title="Time to take it (optional)">
-        <input type="number" id="course-day-input" placeholder="Day" min="0" title="Current day of the course (optional)">
-        <input type="number" id="course-total-input" placeholder="of days" min="1" title="Total days of the course (optional)">
-        <button class="add-btn" id="add-btn">Add</button>
+        <input type="text" id="name-input" placeholder="Nome do medicamento">
+        <input type="text" id="dose-input" placeholder="Dose (opcional)">
+        <input type="text" id="tag-input" placeholder="Categoria (opcional)">
+        <input type="time" id="time-input" title="Horário para tomar (opcional)">
+        <input type="number" id="course-day-input" placeholder="Dia" min="0" title="Dia atual do tratamento (opcional)">
+        <input type="number" id="course-total-input" placeholder="de dias" min="1" title="Duração total do tratamento (opcional)">
+        <button class="add-btn" id="add-btn">Adicionar</button>
       </div>
     </section>
 
@@ -604,14 +606,14 @@ async function kvSet(){
 function renderSyncRow(){
   const row = document.getElementById('sync-row');
   if(!syncId){
-    row.innerHTML = '<span>Not synced</span> <button id="setup-link">set up sync</button>';
+    row.innerHTML = '<span>Não sincronizado</span> <button id="setup-link">configurar sincronização</button>';
     document.getElementById('setup-link').addEventListener('click', showSetupScreen);
     return;
   }
-  row.innerHTML = `<span>Synced</span> <span class="sync-code">${syncId}</span> <button id="copy-code-btn">copy</button> <button id="change-code-btn">change</button>`;
+  row.innerHTML = `<span>Sincronizado</span> <span class="sync-code">${syncId}</span> <button id="copy-code-btn">copiar</button> <button id="change-code-btn">alterar</button>`;
   document.getElementById('copy-code-btn').addEventListener('click', ()=>{
     navigator.clipboard.writeText(syncId);
-    showToast('Sync code copied');
+    showToast('Código copiado');
   });
   document.getElementById('change-code-btn').addEventListener('click', showSetupScreen);
 }
@@ -634,8 +636,8 @@ async function loadData(){
   }
   hideSetupScreen();
   renderSyncRow();
-  document.getElementById('med-list').innerHTML = '<div class="loading">Loading your meds...</div>';
-  document.getElementById('history').innerHTML = '<div class="loading">Loading history...</div>';
+  document.getElementById('med-list').innerHTML = '<div class="loading">Carregando seus remédios...</div>';
+  document.getElementById('history').innerHTML = '<div class="loading">Carregando histórico...</div>';
   try{
     const data = await kvGet();
     meds = data.meds || [];
@@ -643,18 +645,18 @@ async function loadData(){
   }catch(e){
     meds = [];
     logs = [];
-    showToast('Could not reach sync — check your connection');
+    showToast('Não foi possível conectar — verifique sua conexão');
   }
   render();
 }
 
 async function saveMeds(){
   try{ await kvSet(); }
-  catch(e){ showToast('Could not save — check your connection'); }
+  catch(e){ showToast('Não foi possível salvar — verifique sua conexão'); }
 }
 async function saveLogs(){
   try{ await kvSet(); }
-  catch(e){ showToast('Could not save — check your connection'); }
+  catch(e){ showToast('Não foi possível salvar — verifique sua conexão'); }
 }
 
 document.getElementById('create-sync-btn').addEventListener('click', async ()=>{
@@ -664,7 +666,7 @@ document.getElementById('create-sync-btn').addEventListener('click', async ()=>{
   logs = [];
   await kvSet();
   loadData();
-  showToast('Sync code created — copy it to your other devices');
+  showToast('Código criado — copie para seus outros dispositivos');
 });
 
 document.getElementById('join-sync-btn').addEventListener('click', ()=>{
@@ -686,12 +688,12 @@ document.getElementById('skip-sync-checkbox').addEventListener('change', (e)=>{
 
 function formatToday(){
   const d = new Date();
-  return d.toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+  return d.toLocaleDateString('pt-BR', { weekday:'long', month:'short', day:'numeric' });
 }
 
 function formatTime(iso){
   const d = new Date(iso);
-  return d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
 }
 
 function formatDayLabel(iso){
@@ -699,9 +701,9 @@ function formatDayLabel(iso){
   const today = new Date();
   const yest = new Date(); yest.setDate(today.getDate()-1);
   const sameDay = (a,b)=> a.toDateString()===b.toDateString();
-  if(sameDay(d,today)) return 'Today';
-  if(sameDay(d,yest)) return 'Yesterday';
-  return d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+  if(sameDay(d,today)) return 'Hoje';
+  if(sameDay(d,yest)) return 'Ontem';
+  return d.toLocaleDateString('pt-BR', { weekday:'short', month:'short', day:'numeric' });
 }
 
 function render(){
@@ -714,7 +716,7 @@ function render(){
 function renderMeds(){
   const list = document.getElementById('med-list');
   if(meds.length === 0){
-    list.innerHTML = '<div class="empty">No medications yet. Add your first one below.</div>';
+    list.innerHTML = '<div class="empty">Nenhum medicamento ainda. Adicione o primeiro abaixo.</div>';
     return;
   }
 
@@ -729,7 +731,7 @@ function renderMeds(){
   const orderedKeys = groups['none'] ? [...timedKeys, 'none'] : timedKeys;
 
   list.innerHTML = orderedKeys.map(key=>{
-    const groupLabel = key === 'none' ? 'No set time' : formatTimeStr(key);
+    const groupLabel = key === 'none' ? 'Sem horário definido' : formatTimeStr(key);
     const cards = groups[key].map(m => medCardHtml(m)).join('');
     return `
       <div class="time-group">
@@ -766,7 +768,7 @@ function courseBadgeHtml(m){
   const day = m.courseDay || 0;
   const total = m.courseTotal;
   const complete = day >= total;
-  return `<button class="course-badge ${complete ? 'complete' : ''}" data-id="${m.id}">${complete ? 'Course complete' : `Day ${day} of ${total}`}</button>`;
+  return `<button class="course-badge ${complete ? 'complete' : ''}" data-id="${m.id}">${complete ? 'Tratamento completo' : `Dia ${day} de ${total}`}</button>`;
 }
 
 function editMed(id){
@@ -807,12 +809,12 @@ function editFormHtml(m){
           <input type="time" class="edit-time" value="${m.time || ''}">
         </div>
         <div class="edit-row">
-          <input type="number" class="edit-day" placeholder="Day" min="0" value="${m.courseDay ?? ''}">
-          <input type="number" class="edit-total" placeholder="of days" min="1" value="${m.courseTotal ?? ''}">
+          <input type="number" class="edit-day" placeholder="Dia" min="0" value="${m.courseDay ?? ''}">
+          <input type="number" class="edit-total" placeholder="de dias" min="1" value="${m.courseTotal ?? ''}">
         </div>
         <div class="edit-actions">
-          <button class="save-edit-btn" data-id="${m.id}">Save</button>
-          <button class="cancel-edit-btn">Cancel</button>
+          <button class="save-edit-btn" data-id="${m.id}">Salvar</button>
+          <button class="cancel-edit-btn">Cancelar</button>
         </div>
       </div>
     </div>
@@ -829,14 +831,14 @@ function medCardHtml(m){
         ${m.dose ? `<span class="med-dose">${escapeHtml(m.dose)}</span>` : ''}
         ${status.label ? `<span class="${status.cls}">${status.label}</span>` : ''}
         <div class="med-actions-inline">
-          <button class="take-btn" data-id="${m.id}">Mark taken</button>
-          <button class="edit-med" data-id="${m.id}" aria-label="Edit ${escapeHtml(m.name)}">Edit</button>
-          <button class="remove-med" data-id="${m.id}" aria-label="Remove ${escapeHtml(m.name)}">&times;</button>
+          <button class="take-btn" data-id="${m.id}">Marcar tomado</button>
+          <button class="edit-med" data-id="${m.id}" aria-label="Editar ${escapeHtml(m.name)}">Editar</button>
+          <button class="remove-med" data-id="${m.id}" aria-label="Remover ${escapeHtml(m.name)}">&times;</button>
         </div>
       </div>
       <div class="course-row">
         ${m.tag ? `<span class="tag-badge ${tagColorClass(m.tag)}">${escapeHtml(m.tag)}</span>` : ''}
-        ${m.courseTotal ? courseBadgeHtml(m) : `<button class="course-set-btn" data-id="${m.id}">+ set course length</button>`}
+        ${m.courseTotal ? courseBadgeHtml(m) : `<button class="course-set-btn" data-id="${m.id}">+ definir duração</button>`}
       </div>
     </div>
   `;
@@ -845,7 +847,7 @@ function medCardHtml(m){
 function renderHistory(){
   const container = document.getElementById('history');
   if(logs.length === 0){
-    container.innerHTML = '<div class="empty">Nothing logged yet. Mark a medication as taken above.</div>';
+    container.innerHTML = '<div class="empty">Nada registrado ainda. Marque um medicamento como tomado acima.</div>';
     return;
   }
   const sorted = [...logs].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
@@ -865,7 +867,7 @@ function renderHistory(){
         <span class="log-name">${escapeHtml(l.name)}</span>
         ${l.dose ? `<span class="log-dose">${escapeHtml(l.dose)}</span>` : ''}
         ${l.tag ? `<span class="tag-badge ${tagColorClass(l.tag)}">${escapeHtml(l.tag)}</span>` : ''}
-        <button class="del-log" data-id="${l.id}" aria-label="Delete entry">&times;</button>
+        <button class="del-log" data-id="${l.id}" aria-label="Excluir registro">&times;</button>
       </div>
     `).join('');
     return `<div class="day-group"><div class="day-label">${label}</div>${rows}</div>`;
@@ -880,14 +882,14 @@ function formatTimeStr(hhmm){
   const [h,m] = hhmm.split(':').map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  return d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+  return d.toLocaleTimeString('pt-BR', { hour:'numeric', minute:'2-digit' });
 }
 
 function getStatus(med){
   const today = new Date().toDateString();
   const takenToday = logs.find(l => l.medId === med.id && new Date(l.timestamp).toDateString() === today);
   if(takenToday){
-    return { label: 'Taken ' + formatTime(takenToday.timestamp), cls: 'status-done' };
+    return { label: 'Tomado às ' + formatTime(takenToday.timestamp), cls: 'status-done' };
   }
   if(med.time){
     const now = new Date();
@@ -895,7 +897,7 @@ function getStatus(med){
     const scheduled = new Date();
     scheduled.setHours(h, m, 0, 0);
     if(now > scheduled){
-      return { label: 'Due', cls: 'status-due' };
+      return { label: 'Atrasado', cls: 'status-due' };
     }
   }
   return { label: '', cls: '' };
@@ -932,13 +934,13 @@ function computeAvgTime(medId){
   const avgMinutes = Math.round(times.reduce((a,b)=>a+b, 0) / times.length);
   const d = new Date();
   d.setHours(Math.floor(avgMinutes / 60), avgMinutes % 60, 0, 0);
-  return d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+  return d.toLocaleTimeString('pt-BR', { hour:'numeric', minute:'2-digit' });
 }
 
 function renderMetrics(){
   const container = document.getElementById('metrics');
   if(meds.length === 0){
-    container.innerHTML = '<div class="empty">Add a medication to start tracking metrics.</div>';
+    container.innerHTML = '<div class="empty">Adicione um medicamento para começar a acompanhar as métricas.</div>';
     return;
   }
   const sorted = [...meds].sort((a,b)=>{
@@ -955,12 +957,12 @@ function renderMetrics(){
         <span class="metric-name">${escapeHtml(m.name)}</span>
         ${m.tag ? `<span class="tag-badge ${tagColorClass(m.tag)}">${escapeHtml(m.tag)}</span>` : ''}
         <div class="metric-stat">
-          <span class="metric-value">${streak > 0 ? streak + (streak===1 ? ' day' : ' days') : '—'}</span>
-          <span class="metric-label">Streak</span>
+          <span class="metric-value">${streak > 0 ? streak + (streak===1 ? ' dia' : ' dias') : '—'}</span>
+          <span class="metric-label">Sequência</span>
         </div>
         <div class="metric-stat">
           <span class="metric-value">${avg || '—'}</span>
-          <span class="metric-label">Avg time</span>
+          <span class="metric-label">Horário médio</span>
         </div>
       </div>
     `;
@@ -1007,11 +1009,21 @@ async function removeMed(id){
   renderMetrics();
 }
 
+function streakMessage(name, streak){
+  if(streak <= 1){
+    return `✨ ${name} registrado! Primeiro dia da sequência`;
+  }
+  const phrases = ['Arrasou!', 'Isso aí!', 'Muito bem!', 'Você é demais!', 'Continue assim!'];
+  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+  return `🔥 ${phrase} ${streak} dias seguidos de ${name}`;
+}
+
 async function logTaken(id){
   const med = meds.find(m => m.id === id);
   if(!med) return;
   const alreadyTakenToday = !!getStatus(med).label && getStatus(med).cls === 'status-done';
-  logs.push({ id: uid(), medId: med.id, name: med.name, dose: med.dose, tag: med.tag, timestamp: new Date().toISOString() });
+  const now = new Date().toISOString();
+  logs.push({ id: uid(), medId: med.id, name: med.name, dose: med.dose, tag: med.tag, timestamp: now });
   if(!alreadyTakenToday && med.courseTotal){
     med.courseDay = Math.min((med.courseDay || 0) + 1, med.courseTotal);
     await saveMeds();
@@ -1020,6 +1032,7 @@ async function logTaken(id){
   renderHistory();
   renderMeds();
   renderMetrics();
+  showToast(streakMessage(med.name, computeStreak(med.id)));
   const card = document.getElementById('card-'+id);
   if(card){
     card.classList.add('just-taken');

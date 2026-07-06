@@ -132,6 +132,7 @@
     align-items:center;
     gap:10px;
     padding:10px 12px;
+    flex-wrap:wrap;
   }
   .med-name{
     font-weight:600;
@@ -149,6 +150,7 @@
     align-items:center;
     gap:4px;
     margin-left:auto;
+    flex-shrink:0;
   }
   .take-btn{
     border:1px solid var(--border);
@@ -299,6 +301,7 @@
     align-items:center;
     gap:6px;
     padding:0 12px 10px;
+    flex-wrap:wrap;
   }
   input[type=time]{
     padding:10px 10px;
@@ -370,6 +373,7 @@
     border:1px solid var(--border);
     border-radius:12px;
     margin-bottom:8px;
+    flex-wrap:wrap;
   }
   .metric-name{
     font-weight:600;
@@ -410,6 +414,7 @@
     padding:9px 4px;
     border-bottom:1px solid var(--border);
     font-size:14px;
+    flex-wrap:wrap;
   }
   .log-entry:last-child{border-bottom:none;}
   .log-time{
@@ -831,7 +836,7 @@ function medCardHtml(m){
         ${m.dose ? `<span class="med-dose">${escapeHtml(m.dose)}</span>` : ''}
         ${status.label ? `<span class="${status.cls}">${status.label}</span>` : ''}
         <div class="med-actions-inline">
-          <button class="take-btn" data-id="${m.id}">Marcar tomado</button>
+          ${status.cls !== 'status-done' ? `<button class="take-btn" data-id="${m.id}">Marcar tomado</button>` : ''}
           <button class="edit-med" data-id="${m.id}" aria-label="Editar ${escapeHtml(m.name)}">Editar</button>
           <button class="remove-med" data-id="${m.id}" aria-label="Remover ${escapeHtml(m.name)}">&times;</button>
         </div>
